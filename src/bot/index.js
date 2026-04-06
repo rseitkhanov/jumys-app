@@ -254,25 +254,24 @@ bot.on('text', async (ctx) => {
 
   // Шаг 9 — доп условия
   if (step === 'extras') {
-    ctx.session.vacancy.food = text.includes('Питание');
-    ctx.session.vacancy.transport = text.includes('Развозка');
-    ctx.session.step = null;
+  ctx.session.vacancy.food = text.includes('питание') || text.includes('Питание');
+  ctx.session.vacancy.transport = text.includes('Развозка') || text.includes('развозка');
+  ctx.session.step = null;
 
-    const v = ctx.session.vacancy;
+  const v = ctx.session.vacancy;
 
+  try {
     await pool.query(`
       INSERT INTO vacancies 
         (user_id, title, company, category, city, district, salary, schedule, payment_frequency, employment_type, food, transport, status)
       VALUES 
         ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'active')
     `, [
-      ctx.from.id, v.title, v.company, v.category,
-      v.city, v.district, v.salary, v.schedule,
+      ctx.from.id, v.title, v.company || null, v.category,
+      v.city, v.district || null, v.salary, v.schedule,
       v.payment_frequency, v.employment_type,
-      v.food, v.transport
+      v.food || false, v.transport || false
     ]);
-
-    ctx.session.vacancy = {};
 
     const district = v.district ? `📍 ${v.district}\n` : '';
     const company = v.company ? `🏢 ${v.company}\n` : '';
@@ -280,13 +279,17 @@ bot.on('text', async (ctx) => {
     const transport = v.transport ? '🚌 Развозка: есть\n' : '';
 
     return ctx.reply(
-      `✅ Вакансия опубликована!\n\n💼 ${v.title}\n${company}${district}📂 ${v.category}\n🏙 ${v.city}\n💰 ${v.salary}\n🕐 ${v.schedule}\n💳 ${v.payment_frequency}\n📋 ${v.employment_type}\n${food}${transport}\nСоискатели уже могут её найти!`,
+      `✅ Вакансия опубликована!\n\n💼 ${v.title}\n${company}${district}📂 ${v.category}\n🏙 ${v.city}\n💰 ${v.salary}\n🕐 ${v.schedule}\n💳 ${v.payment_frequency}\n📋 ${v.employment_type}\n${food}${transport}`,
       Markup.keyboard([
         ['📢 Публикую вакансию'],
         ['⬅️ Назад']
       ]).resize()
     );
+  } catch (err) {
+    console.error('Ошибка при сохранении вакансии:', err.message);
+    return ctx.reply(`❌ Ошибка: ${err.message}`);
   }
+}
 });
 
 module.exports = bot;
