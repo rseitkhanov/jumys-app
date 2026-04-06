@@ -47,6 +47,17 @@ const init = async () => {
       ('Семей'), ('Алматы'), ('Астана'), ('Шымкент')
     ON CONFLICT DO NOTHING;
   `);
+  
+  await pool.query(`
+  ALTER TABLE vacancies 
+    ADD COLUMN IF NOT EXISTS company VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS district VARCHAR(50),
+    ADD COLUMN IF NOT EXISTS schedule VARCHAR(50),
+    ADD COLUMN IF NOT EXISTS payment_frequency VARCHAR(50),
+    ADD COLUMN IF NOT EXISTS employment_type VARCHAR(20),
+    ADD COLUMN IF NOT EXISTS food BOOLEAN DEFAULT false,
+    ADD COLUMN IF NOT EXISTS transport BOOLEAN DEFAULT false;
+	`);
 
   console.log('✅ База данных готова');
 };
